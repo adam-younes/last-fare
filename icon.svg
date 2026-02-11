@@ -1,0 +1,7 @@
+<svg height="128" width="128" xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" rx="12" fill="#1a1a2e"/>
+  <text x="64" y="52" text-anchor="middle" fill="#e94560" font-family="sans-serif" font-size="40" font-weight="bold">LAST</text>
+  <text x="64" y="92" text-anchor="middle" fill="#0f3460" font-family="sans-serif" font-size="40" font-weight="bold">FARE</text>
+  <circle cx="20" cy="108" r="6" fill="#e94560" opacity="0.6"/>
+  <circle cx="108" cy="108" r="6" fill="#e94560" opacity="0.6"/>
+</svg>

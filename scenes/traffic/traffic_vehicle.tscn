@@ -1,0 +1,59 @@
+[gd_scene load_steps=6 format=3 uid="uid://crtrafveh001"]
+
+[ext_resource type="Script" uid="uid://cd2imsarmvypt" path="res://scripts/traffic/traffic_vehicle.gd" id="1_tv"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tv01"]
+size = Vector3(1.8, 1.3, 4.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tv01"]
+size = Vector3(2.0, 1.5, 4.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tv01"]
+albedo_color = Color(0.25, 0.25, 0.3, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_hl01"]
+radius = 0.1
+height = 0.2
+
+[node name="TrafficVehicle" type="CharacterBody3D"]
+script = ExtResource("1_tv")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+shape = SubResource("BoxShape3D_tv01")
+
+[node name="CarMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+mesh = SubResource("BoxMesh_tv01")
+material_override = SubResource("StandardMaterial3D_tv01")
+
+[node name="HeadlightL" type="SpotLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 0.6, -2.3)
+light_color = Color(1, 0.95, 0.8, 1)
+light_energy = 1.5
+spot_range = 15.0
+spot_angle = 25.0
+
+[node name="HeadlightR" type="SpotLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 0.6, -2.3)
+light_color = Color(1, 0.95, 0.8, 1)
+light_energy = 1.5
+spot_range = 15.0
+spot_angle = 25.0
+
+[node name="TaillightL" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 0.6, 2.3)
+light_color = Color(1, 0.1, 0.1, 1)
+light_energy = 0.4
+omni_range = 2.0
+
+[node name="TaillightR" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 0.6, 2.3)
+light_color = Color(1, 0.1, 0.1, 1)
+light_energy = 0.4
+omni_range = 2.0
+
+[node name="FrontRay" type="RayCast3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+target_position = Vector3(0, 0, -12)
+enabled = true

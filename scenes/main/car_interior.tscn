@@ -1,0 +1,86 @@
+[gd_scene load_steps=10 format=3 uid="uid://crcar00001"]
+
+[ext_resource type="Script" uid="uid://da11q5ui24sou" path="res://scenes/main/car_interior.gd" id="1_car"]
+[ext_resource type="PackedScene" uid="uid://crgps00001" path="res://scenes/ui/gps.tscn" id="2_gps"]
+[ext_resource type="Script" uid="uid://dbb73mbv0l3m7" path="res://scripts/camera_controller.gd" id="3_cam"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_5tr16"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_5tr16"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_bsqsw"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_s1jfi"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_gps01"]
+size = Vector2(0.18, 0.12)
+orientation = 2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_car01"]
+size = Vector3(2.0, 1.2, 4.5)
+
+[node name="CarInterior" type="CharacterBody3D"]
+script = ExtResource("1_car")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+shape = SubResource("BoxShape3D_car01")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.73738784, -0.3377397, -0.5849709, -0.3495103, -0.5502763, 0.75830317, -0.5780302, 0.7636171, 0.2877235, 0, 10, 0)
+light_energy = 0.135
+light_indirect_energy = 0.0
+shadow_enabled = true
+
+[node name="CarMesh" type="Node3D" parent="."]
+
+[node name="CameraController" type="Node3D" parent="CarMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0.2)
+script = ExtResource("3_cam")
+
+[node name="Camera3D" type="Camera3D" parent="CarMesh/CameraController"]
+fov = 70.0
+
+[node name="PassengerSeat" type="Marker3D" parent="CarMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 0.8, -0.5)
+
+[node name="RearviewMirror" type="Node3D" parent="CarMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0.5)
+
+[node name="DashboardLight" type="OmniLight3D" parent="CarMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.6)
+light_color = Color(0.2, 0.3, 0.15, 1)
+light_energy = 0.5
+omni_range = 1.5
+
+[node name="GPSScreen" type="Node3D" parent="CarMesh"]
+transform = Transform3D(1, 0, 0, 0, 0.9397, 0.342, 0, -0.342, 0.9397, -0.15, 0.87, 0.55)
+
+[node name="ScreenMesh" type="MeshInstance3D" parent="CarMesh/GPSScreen"]
+mesh = SubResource("PlaneMesh_gps01")
+
+[node name="SubViewport" type="SubViewport" parent="CarMesh/GPSScreen"]
+gui_disable_input = true
+size = Vector2i(300, 200)
+render_target_update_mode = 4
+
+[node name="GPS" parent="CarMesh/GPSScreen/SubViewport" instance=ExtResource("2_gps")]
+layout_mode = 3
+
+[node name="SteeringWheel" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.6838727, 0, 0, 0, -7.476734e-10, 0.68387264, 0, -0.017104773, -2.989302e-08, 0, 0.51930654, -0.6678542)
+mesh = SubResource("CylinderMesh_5tr16")
+
+[node name="InstrumentPanel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.5307803, -0.29057452, 0, 1.2230455, 0.12610425, 0, 0.5587571, -0.8971284)
+mesh = SubResource("PlaneMesh_5tr16")
+
+[node name="CenterConsole" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.49153787, 0, 0, 0, 0.6732952, 0.061615545, 0, -0.27090865, 0.15313447, 0.6906548, 0.5381331, -0.77564836)
+mesh = SubResource("BoxMesh_bsqsw")
+
+[node name="GearShift" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.48336244, 0, 0, 0, 0.35521102, 0, 0, 0, 1, 0.69176745, 0.1664021, -0.46142298)
+mesh = SubResource("BoxMesh_s1jfi")

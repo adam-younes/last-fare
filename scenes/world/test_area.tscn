@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://crtestarea01"]
+
+[ext_resource type="Script" path="res://scenes/world/test_area.gd" id="1_ta"]
+[ext_resource type="Script" path="res://scripts/road/road_network.gd" id="2_rn"]
+
+[node name="TestArea" type="Node3D"]
+script = ExtResource("1_ta")
+
+[node name="RoadNetwork" type="Node" parent="."]
+script = ExtResource("2_rn")

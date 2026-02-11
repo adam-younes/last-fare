@@ -1,0 +1,59 @@
+[gd_scene load_steps=9 format=3 uid="uid://crgame00001"]
+
+[ext_resource type="Script" uid="uid://prwgpxbb16fa" path="res://scenes/main/game.gd" id="1_game"]
+[ext_resource type="PackedScene" uid="uid://crcar00001" path="res://scenes/main/car_interior.tscn" id="2_car"]
+[ext_resource type="PackedScene" uid="uid://crphone0001" path="res://scenes/ui/phone.tscn" id="4_phone"]
+[ext_resource type="PackedScene" uid="uid://crdlgbox001" path="res://scenes/ui/dialogue_box.tscn" id="5_dlg"]
+[ext_resource type="Script" uid="uid://b4hrm6x1iqrq8" path="res://scripts/passenger_manager.gd" id="6_pmgr"]
+[ext_resource type="PackedScene" uid="uid://crtestarea01" path="res://scenes/world/test_area.tscn" id="7_ta"]
+[ext_resource type="Script" uid="uid://uk7i26bsbeke" path="res://scripts/traffic/traffic_manager.gd" id="8_tmgr"]
+[ext_resource type="Script" uid="uid://bk4hpxlh1mo80" path="res://scripts/proximity_detector.gd" id="9_pdet"]
+
+[node name="Game" type="Node"]
+script = ExtResource("1_game")
+
+[node name="CarInterior" parent="." instance=ExtResource("2_car")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+
+[node name="TestArea" parent="." instance=ExtResource("7_ta")]
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="Phone" parent="UILayer" instance=ExtResource("4_phone")]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 1580.0
+offset_top = 20.0
+offset_right = 1900.0
+offset_bottom = 350.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="DialogueBox" parent="UILayer" instance=ExtResource("5_dlg")]
+layout_mode = 3
+
+[node name="FadeOverlay" type="ColorRect" parent="UILayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="PassengerManager" type="Node" parent="."]
+script = ExtResource("6_pmgr")
+
+[node name="TrafficManager" type="Node" parent="."]
+script = ExtResource("8_tmgr")
+
+[node name="PickupDetector" type="Node" parent="."]
+script = ExtResource("9_pdet")
+
+[node name="DestinationDetector" type="Node" parent="."]
+script = ExtResource("9_pdet")
+
+[editable path="CarInterior"]

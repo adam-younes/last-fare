@@ -1,0 +1,91 @@
+[gd_resource type="Resource" script_class="PassengerData" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://resources/passenger_data.gd" id="1_pd"]
+[ext_resource type="Script" path="res://resources/dialogue_node.gd" id="2_dn"]
+[ext_resource type="Script" path="res://resources/dialogue_choice.gd" id="3_dc"]
+
+[sub_resource type="Resource" id="choice_how_know"]
+script = ExtResource("3_dc")
+text = "How do you know my name?"
+next_node = "m3_how"
+sets_flag = "confronted_man"
+
+[sub_resource type="Resource" id="choice_ignore"]
+script = ExtResource("3_dc")
+text = "(Say nothing.)"
+next_node = "m3_silent"
+sets_flag = "ignored_man_knowing"
+
+[sub_resource type="Resource" id="node_m1"]
+script = ExtResource("2_dn")
+id = "m1"
+speaker = "PASSENGER"
+text = "Long night, huh, {player_name}?"
+next_node = "m2"
+pre_delay = 3.0
+
+[sub_resource type="Resource" id="node_m2"]
+script = ExtResource("2_dn")
+id = "m2"
+speaker = "INTERNAL"
+text = "(You never told him your name. The app only shows your first initial.)"
+choices = [SubResource("choice_how_know"), SubResource("choice_ignore")]
+pre_delay = 1.0
+
+[sub_resource type="Resource" id="node_m3_how"]
+script = ExtResource("2_dn")
+id = "m3_how"
+speaker = "PASSENGER"
+text = "It's on the app, isn't it? Relax."
+next_node = "m4"
+
+[sub_resource type="Resource" id="node_m3_silent"]
+script = ExtResource("2_dn")
+id = "m3_silent"
+speaker = "PASSENGER"
+text = "Not much of a talker tonight. You were chattier when you lived in {player_hometown}."
+next_node = "m4"
+triggers = ["ambience:tension"]
+
+[sub_resource type="Resource" id="node_m4"]
+script = ExtResource("2_dn")
+id = "m4"
+speaker = "PASSENGER"
+text = "You know, I almost didn't request you. But the app kept suggesting you. Over and over. Like it wanted us to meet."
+next_node = "m5"
+pre_delay = 2.0
+triggers = ["ambience:tension"]
+
+[sub_resource type="Resource" id="node_m5"]
+script = ExtResource("2_dn")
+id = "m5"
+speaker = "PASSENGER"
+text = "How many years has it been? {years_driving}? Feels longer, doesn't it."
+next_node = "m6"
+
+[sub_resource type="Resource" id="node_m6"]
+script = ExtResource("2_dn")
+id = "m6"
+speaker = "PASSENGER"
+text = "This is my stop. Oh — and {player_name}? Don't pick up the next one."
+triggers = ["set_flag:man_warned_you", "ambience:silence"]
+auto_advance = 4.0
+
+[resource]
+script = ExtResource("1_pd")
+id = "man_who_knows"
+display_name = "Daniel"
+pickup_location = "Regency Hotel, Room 6 pickup"
+destination = "1200 Lakeside Dr"
+destination_exists = true
+dialogue_nodes = [SubResource("node_m1"), SubResource("node_m2"), SubResource("node_m3_how"), SubResource("node_m3_silent"), SubResource("node_m4"), SubResource("node_m5"), SubResource("node_m6")]
+required_flags = ["met_woman"]
+min_ride_number = 1
+max_ride_number = 3
+time_window = Vector2(23, 4)
+sets_flags = ["met_man_who_knows", "man_ride_complete"]
+triggers_event = ""
+is_refusable = true
+refuse_consequence = "flag_refused_man"
+is_mandatory = false
+ambient_override = -1

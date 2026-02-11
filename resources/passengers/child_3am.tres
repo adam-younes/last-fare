@@ -1,0 +1,82 @@
+[gd_resource type="Resource" script_class="PassengerData" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://resources/passenger_data.gd" id="1_pd"]
+[ext_resource type="Script" path="res://resources/dialogue_node.gd" id="2_dn"]
+[ext_resource type="Script" path="res://resources/dialogue_choice.gd" id="3_dc"]
+
+[sub_resource type="Resource" id="choice_ask_parents"]
+script = ExtResource("3_dc")
+text = "Where are your parents?"
+next_node = "c3_parents"
+sets_flag = "asked_child_parents"
+
+[sub_resource type="Resource" id="choice_ask_address"]
+script = ExtResource("3_dc")
+text = "Are you sure about that address?"
+next_node = "c3_address"
+
+[sub_resource type="Resource" id="node_c1"]
+script = ExtResource("2_dn")
+id = "c1"
+speaker = "NARRATOR"
+text = "A child stands at the curb. Alone. They can't be older than eight."
+next_node = "c2"
+pre_delay = 1.0
+
+[sub_resource type="Resource" id="node_c2"]
+script = ExtResource("2_dn")
+id = "c2"
+speaker = "PASSENGER"
+text = "Hi. I need to go to 4481 Hargrove Road."
+choices = [SubResource("choice_ask_parents"), SubResource("choice_ask_address")]
+
+[sub_resource type="Resource" id="node_c3_parents"]
+script = ExtResource("2_dn")
+id = "c3_parents"
+speaker = "PASSENGER"
+text = "They're already there. They're waiting for me."
+next_node = "c4"
+
+[sub_resource type="Resource" id="node_c3_address"]
+script = ExtResource("2_dn")
+id = "c3_address"
+speaker = "PASSENGER"
+text = "That's where I'm going. That's where everyone goes."
+next_node = "c4"
+triggers = ["ambience:tension"]
+
+[sub_resource type="Resource" id="node_c4"]
+script = ExtResource("2_dn")
+id = "c4"
+speaker = "GPS"
+text = "Destination not found."
+triggers = ["gps:glitch", "ambience:wrong"]
+pre_delay = 3.0
+next_node = "c5"
+
+[sub_resource type="Resource" id="node_c5"]
+script = ExtResource("2_dn")
+id = "c5"
+speaker = "PASSENGER"
+text = "That's okay. You know the way. You've been there before, {player_name}."
+triggers = ["set_flag:child_knows_name", "ambience:silence"]
+pre_delay = 2.0
+auto_advance = 5.0
+
+[resource]
+script = ExtResource("1_pd")
+id = "child_3am"
+display_name = "Ride Request"
+pickup_location = "Corner of Elm & 3rd"
+destination = "4481 Hargrove Road"
+destination_exists = false
+dialogue_nodes = [SubResource("node_c1"), SubResource("node_c2"), SubResource("node_c3_parents"), SubResource("node_c3_address"), SubResource("node_c4"), SubResource("node_c5")]
+min_ride_number = 2
+max_ride_number = 4
+time_window = Vector2(23, 5)
+sets_flags = ["met_child", "child_ride_complete", "accepted_child"]
+triggers_event = ""
+is_refusable = true
+refuse_consequence = "flag_refused_child"
+is_mandatory = false
+ambient_override = -1

@@ -12,6 +12,8 @@ var _armed: bool = false
 
 
 func set_target(world_pos: Vector3) -> void:
+	if world_pos == Vector3.ZERO:
+		push_warning("ProximityDetector: Target set to origin (0,0,0) — likely uninitialized")
 	_target_position = world_pos
 	_is_active = true
 	_armed = false

@@ -13,7 +13,7 @@ extends Resource
 @export var condition: String = ""
 
 ## Branching choices (if empty, dialogue advances to next_node)
-@export var choices: Array[Resource]  ## Array of DialogueChoice
+@export var choices: Array[DialogueChoice]
 
 ## Next node ID if no choices
 @export var next_node: String = ""

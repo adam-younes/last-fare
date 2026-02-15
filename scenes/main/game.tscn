@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://crgame00001"]
+[gd_scene load_steps=10 format=3 uid="uid://crgame00001"]
 
 [ext_resource type="Script" uid="uid://prwgpxbb16fa" path="res://scenes/main/game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://crcar00001" path="res://scenes/main/car_interior.tscn" id="2_car"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://crtestarea01" path="res://scenes/world/test_area.tscn" id="7_ta"]
 [ext_resource type="Script" uid="uid://uk7i26bsbeke" path="res://scripts/traffic/traffic_manager.gd" id="8_tmgr"]
 [ext_resource type="Script" uid="uid://bk4hpxlh1mo80" path="res://scripts/proximity_detector.gd" id="9_pdet"]
+[ext_resource type="PackedScene" uid="uid://crpause0001" path="res://scenes/ui/pause_menu.tscn" id="10_pause"]
 
 [node name="Game" type="Node"]
 script = ExtResource("1_game")
@@ -21,6 +22,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 layer = 10
 
 [node name="Phone" parent="UILayer" instance=ExtResource("4_phone")]
+unique_name_in_owner = true
 layout_mode = 3
 anchors_preset = 0
 anchor_right = 0.0
@@ -33,9 +35,11 @@ grow_horizontal = 1
 grow_vertical = 1
 
 [node name="DialogueBox" parent="UILayer" instance=ExtResource("5_dlg")]
+unique_name_in_owner = true
 layout_mode = 3
 
 [node name="FadeOverlay" type="ColorRect" parent="UILayer"]
+unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -43,6 +47,9 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0)
+
+[node name="PauseMenu" parent="UILayer" instance=ExtResource("10_pause")]
+layout_mode = 1
 
 [node name="PassengerManager" type="Node" parent="."]
 script = ExtResource("6_pmgr")

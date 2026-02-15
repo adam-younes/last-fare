@@ -4,9 +4,9 @@ extends Control
 signal dialogue_finished
 signal choice_made(choice_index: int)
 
-var _current_nodes: Array = []  # Array of DialogueNode
+var _current_nodes: Array[DialogueNode] = []
 var _current_index: int = -1
-var _node_map: Dictionary = {}  # id -> DialogueNode
+var _node_map: Dictionary[String, DialogueNode] = {}
 var _waiting_for_choice: bool = false
 var _auto_advance_timer: float = 0.0
 
@@ -46,7 +46,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ## Start a dialogue sequence from an array of DialogueNode resources.
-func start_dialogue(nodes: Array) -> void:
+func start_dialogue(nodes: Array[DialogueNode]) -> void:
 	_current_nodes = nodes
 	_current_index = -1
 	_node_map.clear()
@@ -59,42 +59,53 @@ func start_dialogue(nodes: Array) -> void:
 
 ## Advance to the next line or follow a branch.
 func advance(target_id: String = "") -> void:
-	# Clear choices
 	_clear_choices()
 	_waiting_for_choice = false
 	_auto_advance_timer = 0.0
 
 	var next_node: DialogueNode = null
+	var max_skips: int = 100  # Safety limit
 
-	if not target_id.is_empty():
-		next_node = _node_map.get(target_id)
-	else:
-		# Try current node's next_node first
-		if _current_index >= 0 and _current_index < _current_nodes.size():
-			var current: DialogueNode = _current_nodes[_current_index] as DialogueNode
-			if current and not current.next_node.is_empty():
-				next_node = _node_map.get(current.next_node)
+	while max_skips > 0:
+		max_skips -= 1
+		next_node = null
 
-		# Otherwise advance sequentially
+		if not target_id.is_empty():
+			next_node = _node_map.get(target_id)
+			target_id = ""  # Only use target_id on first iteration
+		else:
+			# Try current node's next_node first
+			if _current_index >= 0 and _current_index < _current_nodes.size():
+				var current: DialogueNode = _current_nodes[_current_index] as DialogueNode
+				if current and not current.next_node.is_empty():
+					next_node = _node_map.get(current.next_node)
+
+			# Otherwise advance sequentially
+			if next_node == null:
+				_current_index += 1
+				if _current_index < _current_nodes.size():
+					next_node = _current_nodes[_current_index] as DialogueNode
+
 		if next_node == null:
-			_current_index += 1
-			if _current_index < _current_nodes.size():
-				next_node = _current_nodes[_current_index] as DialogueNode
+			_end_dialogue()
+			return
+
+		# Update index to match this node
+		for i in _current_nodes.size():
+			if _current_nodes[i] == next_node:
+				_current_index = i
+				break
+
+		# Check condition — if fails, loop to skip this node
+		if not GameState.evaluate_condition(next_node.condition):
+			continue
+
+		# Node passes condition — display it
+		break
 
 	if next_node == null:
+		push_warning("DialogueBox: Exhausted skip limit, ending dialogue")
 		_end_dialogue()
-		return
-
-	# Update index to match this node
-	for i in _current_nodes.size():
-		if _current_nodes[i] == next_node:
-			_current_index = i
-			break
-
-	# Check condition
-	if not GameState.evaluate_condition(next_node.condition):
-		# Skip this node, try next
-		advance()
 		return
 
 	# Fire triggers
@@ -126,7 +137,7 @@ func _display_node(node: DialogueNode) -> void:
 			speaker_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 
 	# Show choices if any
-	var valid_choices: Array = []
+	var valid_choices: Array[DialogueChoice] = []
 	for choice in node.choices:
 		if choice is DialogueChoice:
 			if GameState.evaluate_condition(choice.condition):
@@ -138,7 +149,7 @@ func _display_node(node: DialogueNode) -> void:
 		_auto_advance_timer = node.auto_advance
 
 
-func _show_choices(choices: Array) -> void:
+func _show_choices(choices: Array[DialogueChoice]) -> void:
 	_waiting_for_choice = true
 	for i in choices.size():
 		var choice: DialogueChoice = choices[i]
@@ -208,6 +219,8 @@ func _substitute_variables(text: String) -> String:
 
 func _fire_triggers(triggers: Array) -> void:
 	for trigger: String in triggers:
+		if trigger.is_empty():
+			continue
 		var parts := trigger.split(":", true, 1)
 		var action := parts[0]
 		var param := parts[1] if parts.size() > 1 else ""
@@ -218,15 +231,19 @@ func _fire_triggers(triggers: Array) -> void:
 			"remove_flag":
 				GameState.remove_flag(param)
 			"gps":
-				var gps := get_tree().get_first_node_in_group("gps")
-				if gps and gps.has_method("set_state"):
+				var gps_node := get_tree().get_first_node_in_group("gps")
+				if gps_node == null:
+					push_warning("DialogueBox: GPS node not found in group 'gps' for trigger '%s'" % trigger)
+				elif gps_node.has_method("set_state"):
 					match param:
 						"glitch":
-							gps.set_state(1)  # GPSState.GLITCHING
+							gps_node.set_state(1)  # GPSState.GLITCHING
 						"no_signal":
-							gps.set_state(3)  # GPSState.NO_SIGNAL
+							gps_node.set_state(3)  # GPSState.NO_SIGNAL
 						"normal":
-							gps.set_state(0)  # GPSState.NORMAL
+							gps_node.set_state(0)  # GPSState.NORMAL
+						_:
+							push_warning("DialogueBox: Unknown GPS trigger param '%s'" % param)
 			"event":
 				EventManager.trigger(param)
 			"ambience":
@@ -239,3 +256,5 @@ func _fire_triggers(triggers: Array) -> void:
 						AudioManager.set_ambience(AudioManager.AmbienceState.WRONG)
 					"normal":
 						AudioManager.set_ambience(AudioManager.AmbienceState.NORMAL_DRIVING)
+			_:
+				push_warning("DialogueBox: Unknown trigger action '%s' in '%s'" % [action, trigger])

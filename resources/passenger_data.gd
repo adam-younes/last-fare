@@ -14,7 +14,7 @@ extends Resource
 @export var silhouette_color: Color = Color(0.1, 0.1, 0.1, 0.9)
 
 @export_group("Dialogue")
-@export var dialogue_nodes: Array[Resource]  ## Array of DialogueNode resources
+@export var dialogue_nodes: Array[DialogueNode]
 
 @export_group("Conditions")
 ## Flags that must be set for this passenger to appear
@@ -59,7 +59,7 @@ extends Resource
 @export var ride_sounds: Array[AudioStream]
 
 
-func meets_conditions(current_flags: Dictionary, ride_number: int, current_time: float) -> bool:
+func meets_conditions(current_flags: Dictionary[String, bool], ride_number: int, current_time: float) -> bool:
 	# Check ride number
 	if ride_number < min_ride_number or ride_number > max_ride_number:
 		return false

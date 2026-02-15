@@ -35,7 +35,7 @@ var last_narrative_ride_number: int = 0
 var rides_completed: int = 0
 
 # Flags — the backbone of narrative branching
-var flags: Dictionary = {}
+var flags: Dictionary[String, bool] = {}
 
 # History
 var completed_passenger_ids: Array[String] = []

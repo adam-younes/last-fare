@@ -4,7 +4,7 @@ extends Node
 # Audio buses: Master, Ambient, SFX, Music, Voice
 
 # Ambient layers — always running, crossfade between states
-var _ambient_players: Dictionary = {}
+var _ambient_players: Dictionary[String, AudioStreamPlayer] = {}
 
 enum AmbienceState {
 	NORMAL_DRIVING,
@@ -105,7 +105,8 @@ func set_layer_stream(layer_name: String, stream: AudioStream) -> void:
 
 ## Stop all audio (for scene transitions or hard cuts).
 func stop_all(fade_time: float = 0.5) -> void:
-	for player: AudioStreamPlayer in _ambient_players.values():
+	for key: String in _ambient_players:
+		var player: AudioStreamPlayer = _ambient_players[key]
 		var tween := create_tween()
 		tween.tween_property(player, "volume_db", -80.0, fade_time)
 		tween.tween_callback(player.stop)

@@ -55,6 +55,8 @@ func get_next_passenger() -> PassengerData:
 	# 3. Otherwise, generate procedural (needs road network)
 	if _road_network:
 		return _procedural_generator.generate(_road_network)
+	else:
+		push_warning("PassengerManager: No road network, cannot generate procedural passenger")
 
 	# 4. Fallback: try narrative anyway
 	var fallback: PassengerData = _get_eligible_narrative_passenger()
@@ -107,12 +109,12 @@ func _assign_world_positions(passenger: PassengerData) -> void:
 
 	# Only assign if positions are default (zero)
 	if passenger.pickup_world_position == Vector3.ZERO:
-		var pickup: Dictionary = _road_network.get_random_road_position()
-		passenger.pickup_world_position = pickup["position"]
+		var pickup: RoadNetwork.RoadPosition = _road_network.get_random_road_position()
+		passenger.pickup_world_position = pickup.position
 
 	if passenger.destination_world_position == Vector3.ZERO and passenger.destination_exists:
-		var destination: Dictionary = _road_network.get_random_road_position()
-		passenger.destination_world_position = destination["position"]
+		var destination: RoadNetwork.RoadPosition = _road_network.get_random_road_position()
+		passenger.destination_world_position = destination.position
 
 
 func get_available_count() -> int:

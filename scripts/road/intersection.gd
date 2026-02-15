@@ -11,13 +11,13 @@ enum LightState { GREEN, YELLOW, RED }
 @export var green_duration: float = 15.0
 @export var yellow_duration: float = 3.0
 
-var _light_states: Dictionary = {}  # int group -> LightState
+var _light_states: Dictionary[int, LightState] = {}
 var _cycle_timer: float = 0.0
 var _current_green_group: int = 0
 var _in_yellow: bool = false
 
 # Visual nodes
-var _light_meshes: Dictionary = {}  # int group -> { green: MeshInstance3D, yellow: MeshInstance3D, red: MeshInstance3D }
+var _light_meshes: Dictionary[int, Dictionary] = {}
 
 
 func _ready() -> void:
@@ -94,7 +94,7 @@ func _build_traffic_light_visuals() -> void:
 
 		# Light spheres (top=red, middle=yellow, bottom=green)
 		var light_data: Dictionary = {}
-		var light_configs: Array[Array] = [
+		var light_configs: Array = [
 			["red", 0.35, Color(1.0, 0.1, 0.1)],
 			["yellow", 0.0, Color(1.0, 0.9, 0.1)],
 			["green", -0.35, Color(0.1, 1.0, 0.2)],
@@ -136,9 +136,11 @@ func _update_light_visuals() -> void:
 			_:
 				active_name = "red"
 
-		for light_name in meshes:
+		for light_name: String in meshes:
 			var sphere: MeshInstance3D = meshes[light_name]
 			var mat: StandardMaterial3D = sphere.material_override as StandardMaterial3D
+			if mat == null:
+				continue
 			if light_name == active_name:
 				var col: Color = sphere.get_meta("emission_color") as Color
 				mat.albedo_color = col

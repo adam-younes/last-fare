@@ -4,7 +4,7 @@ extends Node
 signal event_triggered(event_id: String)
 signal event_completed(event_id: String)
 
-var _event_scripts: Dictionary = {}
+var _event_scripts: Dictionary[String, GDScript] = {}
 var _active_event: GameEvent = null
 
 

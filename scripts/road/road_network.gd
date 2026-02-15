@@ -2,6 +2,35 @@ class_name RoadNetwork
 extends Node
 ## Manages all roads and intersections. Provides queries for AI, GPS, and passenger generation.
 
+
+class LanePosition:
+	var road: RoadSegment
+	var lane: int
+	var direction: int
+	var position: Vector3
+	var t: float
+
+	func _init(p_road: RoadSegment = null, p_lane: int = 0, p_direction: int = 1, p_position: Vector3 = Vector3.ZERO, p_t: float = 0.0) -> void:
+		road = p_road
+		lane = p_lane
+		direction = p_direction
+		position = p_position
+		t = p_t
+
+
+class RoadPosition:
+	var road: RoadSegment
+	var position: Vector3
+	var t: float
+	var direction: int
+
+	func _init(p_road: RoadSegment = null, p_position: Vector3 = Vector3.ZERO, p_t: float = 0.0, p_direction: int = 1) -> void:
+		road = p_road
+		position = p_position
+		t = p_t
+		direction = p_direction
+
+
 var _roads: Array[RoadSegment] = []
 var _intersections: Array[Intersection] = []
 
@@ -41,8 +70,8 @@ func get_nearest_road(world_pos: Vector3) -> RoadSegment:
 	return best_road
 
 
-func get_nearest_lane_position(world_pos: Vector3) -> Dictionary:
-	var best: Dictionary = { "road": null, "lane": 0, "direction": 1, "position": Vector3.ZERO, "t": 0.0 }
+func get_nearest_lane_position(world_pos: Vector3) -> LanePosition:
+	var best := LanePosition.new()
 	var best_dist: float = INF
 
 	for road in _roads:
@@ -53,23 +82,22 @@ func get_nearest_lane_position(world_pos: Vector3) -> Dictionary:
 					var dist: float = world_pos.distance_to(points[i])
 					if dist < best_dist:
 						best_dist = dist
-						best["road"] = road
-						best["lane"] = lane_idx
-						best["direction"] = dir
-						best["position"] = points[i]
-						best["t"] = float(i) / float(maxi(points.size() - 1, 1))
+						best.road = road
+						best.lane = lane_idx
+						best.direction = dir
+						best.position = points[i]
+						best.t = float(i) / float(maxi(points.size() - 1, 1))
 	return best
 
 
-func get_random_road_position() -> Dictionary:
+func get_random_road_position() -> RoadPosition:
 	if _roads.is_empty():
-		return { "road": null, "position": Vector3.ZERO }
+		return RoadPosition.new()
 
 	var road: RoadSegment = _roads.pick_random()
 	var t: float = randf()
 	var baked_length: float = road.curve.get_baked_length()
 	var pos: Vector3 = road.curve.sample_baked(t * baked_length)
-	# Offset to a random lane side
 	var dir: int = 1 if randf() > 0.5 else -1
 	var next_t: float = minf(t + 0.01, 1.0)
 	var next_pos: Vector3 = road.curve.sample_baked(next_t * baked_length)
@@ -80,7 +108,7 @@ func get_random_road_position() -> Dictionary:
 		pos += right * offset
 
 	var world_pos: Vector3 = road.global_transform * pos
-	return { "road": road, "position": world_pos, "t": t, "direction": dir }
+	return RoadPosition.new(road, world_pos, t, dir)
 
 
 func get_intersection_at(world_pos: Vector3, radius: float = 5.0) -> Intersection:

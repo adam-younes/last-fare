@@ -46,21 +46,18 @@ func generate(road_network: RoadNetwork) -> PassengerData:
 	)
 
 	# Physical locations
-	var pickup: Dictionary = road_network.get_random_road_position()
-	var destination: Dictionary = road_network.get_random_road_position()
+	var pickup: RoadNetwork.RoadPosition = road_network.get_random_road_position()
+	var destination: RoadNetwork.RoadPosition = road_network.get_random_road_position()
 	# Ensure pickup and destination are different roads
 	var attempts: int = 0
-	while destination["road"] == pickup["road"] and attempts < 10:
+	while destination.road == pickup.road and attempts < 10:
 		destination = road_network.get_random_road_position()
 		attempts += 1
 
-	var pickup_road: RoadSegment = pickup["road"] as RoadSegment
-	var dest_road: RoadSegment = destination["road"] as RoadSegment
-
-	p.pickup_location = pickup_road.road_name if pickup_road else "Unknown"
-	p.destination = dest_road.road_name if dest_road else "Unknown"
-	p.pickup_world_position = pickup["position"]
-	p.destination_world_position = destination["position"]
+	p.pickup_location = pickup.road.road_name if pickup.road else "Unknown"
+	p.destination = destination.road.road_name if destination.road else "Unknown"
+	p.pickup_world_position = pickup.position
+	p.destination_world_position = destination.position
 	p.destination_exists = true
 
 	# Minimal dialogue
@@ -90,8 +87,8 @@ func _pick_name() -> String:
 	return name
 
 
-func _generate_minimal_dialogue(p: PassengerData) -> Array[Resource]:
-	var nodes: Array[Resource] = []
+func _generate_minimal_dialogue(p: PassengerData) -> Array[DialogueNode]:
+	var nodes: Array[DialogueNode] = []
 
 	# Greeting
 	var greeting := DialogueNode.new()

@@ -34,11 +34,19 @@ class RoadPosition:
 var _roads: Array[RoadSegment] = []
 var _intersections: Array[Intersection] = []
 
+# Maps RoadSegment -> { "start": Intersection or null, "end": Intersection or null }
+var _road_endpoints: Dictionary = {}
+
+# Maps Intersection -> Array of { "road": RoadSegment, "enters_forward": bool }
+# enters_forward=true means a vehicle entering from this intersection travels direction=1
+var _intersection_connections: Dictionary = {}
+
 
 func discover() -> void:
 	_roads.clear()
 	_intersections.clear()
 	_discover_children(self)
+	_build_adjacency()
 
 
 func _discover_children(node: Node) -> void:
@@ -116,6 +124,77 @@ func get_intersection_at(world_pos: Vector3, radius: float = 5.0) -> Intersectio
 		if intersection.global_position.distance_to(world_pos) < radius:
 			return intersection
 	return null
+
+
+const ENDPOINT_THRESHOLD := 10.0  # meters — match existing proximity checks
+
+
+func _build_adjacency() -> void:
+	_road_endpoints.clear()
+	_intersection_connections.clear()
+
+	for road in _roads:
+		var curve_start: Vector3 = road.global_transform * road.curve.get_point_position(0)
+		var curve_end: Vector3 = road.global_transform * road.curve.get_point_position(road.curve.point_count - 1)
+
+		var start_intersection: Intersection = null
+		var end_intersection: Intersection = null
+
+		for intersection in _intersections:
+			var ipos: Vector3 = intersection.global_position
+			if curve_start.distance_to(ipos) < ENDPOINT_THRESHOLD:
+				start_intersection = intersection
+			if curve_end.distance_to(ipos) < ENDPOINT_THRESHOLD:
+				end_intersection = intersection
+
+		_road_endpoints[road] = {
+			"start": start_intersection,
+			"end": end_intersection,
+		}
+
+		# Register road with each intersection it touches
+		if start_intersection:
+			if not _intersection_connections.has(start_intersection):
+				_intersection_connections[start_intersection] = []
+			_intersection_connections[start_intersection].append({
+				"road": road,
+				"enters_forward": true,  # entering from curve start -> travel direction=1
+			})
+
+		if end_intersection:
+			if not _intersection_connections.has(end_intersection):
+				_intersection_connections[end_intersection] = []
+			_intersection_connections[end_intersection].append({
+				"road": road,
+				"enters_forward": false,  # entering from curve end -> travel direction=-1
+			})
+
+
+## Returns the intersection at the destination end of a road for a given travel direction.
+## direction=1 -> vehicle heading toward curve end; direction=-1 -> heading toward curve start.
+func get_road_end_intersection(road: RoadSegment, direction: int) -> Intersection:
+	var endpoints: Dictionary = _road_endpoints.get(road, {})
+	if endpoints.is_empty():
+		return null
+	if direction == 1:
+		return endpoints["end"] as Intersection
+	else:
+		return endpoints["start"] as Intersection
+
+
+## Returns roads connected to an intersection, excluding a given road.
+## Each entry: { "road": RoadSegment, "direction": int }
+## direction is the travel direction for a vehicle entering from this intersection.
+func get_connected_roads(intersection: Intersection, exclude: RoadSegment = null) -> Array[Dictionary]:
+	var connections: Array = _intersection_connections.get(intersection, [])
+	var result: Array[Dictionary] = []
+	for conn: Dictionary in connections:
+		var road: RoadSegment = conn["road"] as RoadSegment
+		if road == exclude:
+			continue
+		var dir: int = 1 if conn["enters_forward"] else -1
+		result.append({ "road": road, "direction": dir })
+	return result
 
 
 func _closest_point_on_road(road: RoadSegment, world_pos: Vector3) -> Vector3:

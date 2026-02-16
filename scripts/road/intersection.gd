@@ -6,7 +6,6 @@ signal light_changed(road_group: int, new_state: LightState)
 
 enum LightState { GREEN, YELLOW, RED }
 
-@export var connected_roads: Array[NodePath] = []
 @export var has_traffic_light: bool = true
 @export var green_duration: float = 15.0
 @export var yellow_duration: float = 3.0

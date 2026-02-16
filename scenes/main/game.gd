@@ -23,6 +23,9 @@ var _active_pickup_marker: PickupMarker = null
 var _active_destination_marker: PickupMarker = null
 
 @onready var car_interior: CharacterBody3D = $CarInterior
+@onready var speedometer: Label = %Speedometer
+@onready var rpm_meter: Label = %RPMMeter
+@onready var gear_indicator: Label = %GearIndicator
 @onready var gps: Control = $CarInterior/CarMesh/GPSScreen/SubViewport/GPS
 @onready var phone: Control = %Phone
 @onready var dialogue_box: Control = %DialogueBox
@@ -74,6 +77,7 @@ func _register_phase_states() -> void:
 func _process(delta: float) -> void:
 	if _current_state:
 		_current_state.process(delta)
+	_update_speedometer()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -81,6 +85,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		accept_current_ride()
 	elif event.is_action_pressed("refuse_ride") and current_phase == GamePhase.RIDE_OFFERED:
 		refuse_current_ride()
+
+
+func _update_speedometer() -> void:
+	var mph: int = roundi(car_interior.get_speed_mph())
+	speedometer.text = str(mph) + " MPH"
+	var rpm: int = roundi(car_interior.get_rpm())
+	rpm_meter.text = str(rpm) + " RPM"
+	gear_indicator.text = "GEAR: " + car_interior.get_gear_string()
 
 
 func _connect_signals() -> void:

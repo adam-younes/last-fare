@@ -2,6 +2,8 @@ class_name TrafficVehicle
 extends CharacterBody3D
 ## AI vehicle that follows road paths, obeys traffic lights, and reacts to obstacles.
 
+signal vehicle_despawning
+
 enum State { DRIVING, BRAKING, STOPPED, TURNING }
 
 var _state: State = State.DRIVING
@@ -14,6 +16,7 @@ var _assigned_direction: int = 1
 var _road_network: RoadNetwork = null
 var _stopped_timer: float = 0.0
 var _honk_cooldown: float = 0.0
+var _vertical_velocity: float = 0.0
 
 const ACCELERATION := 6.0
 const BRAKE_DECEL := 12.0
@@ -54,8 +57,14 @@ func _physics_process(delta: float) -> void:
 	# Apply movement
 	var forward: Vector3 = -transform.basis.z
 	velocity = forward * _current_speed
-	if not is_on_floor():
-		velocity.y -= 9.8 * delta
+
+	# Gravity — accumulate like car_interior.gd for realistic falling
+	if is_on_floor():
+		_vertical_velocity = 0.0
+	else:
+		_vertical_velocity -= 9.8 * delta
+
+	velocity.y = _vertical_velocity
 	move_and_slide()
 
 
@@ -167,54 +176,54 @@ func _should_stop_for_light() -> bool:
 	if not _road_network or not _assigned_road:
 		return false
 
-	# Check if approaching an intersection
-	var look_ahead: float = 15.0
-	if _path_index < _path_points.size():
-		var current_pos: Vector3 = global_position
-		var intersection: Intersection = _road_network.get_intersection_at(current_pos, look_ahead)
-		if intersection:
-			var dist: float = current_pos.distance_to(intersection.global_position)
-			# Only stop if we're approaching (not already in intersection)
-			if dist > STOP_DISTANCE and dist < look_ahead:
-				var light_state: Intersection.LightState = intersection.get_light_state(_assigned_road)
-				if light_state != Intersection.LightState.GREEN:
-					return true
-	return false
+	# O(1) lookup: get the intersection ahead of us
+	var intersection: Intersection = _road_network.get_road_end_intersection(
+		_assigned_road, _assigned_direction
+	)
+	if not intersection:
+		return false
+
+	var to_intersection: Vector3 = intersection.global_position - global_position
+	var dist: float = to_intersection.length()
+
+	# Only consider intersections within stopping range, not ones we're already past
+	if dist < STOP_DISTANCE or dist > 15.0:
+		return false
+
+	# Dot-product: only stop if the intersection is ahead of us
+	var forward: Vector3 = -transform.basis.z
+	if forward.dot(to_intersection.normalized()) < 0.0:
+		return false
+
+	var light_state: Intersection.LightState = intersection.get_light_state(_assigned_road)
+	return light_state != Intersection.LightState.GREEN
 
 
 func _try_next_road() -> void:
 	if not _road_network:
-		queue_free()
+		_self_despawn()
 		return
 
-	# Find intersection at end of current road
-	var end_pos: Vector3 = _path_points[_path_points.size() - 1]
-	var intersection: Intersection = _road_network.get_intersection_at(end_pos, 10.0)
-
+	# Get the intersection at the end of our current road (in our travel direction)
+	var intersection: Intersection = _road_network.get_road_end_intersection(
+		_assigned_road, _assigned_direction
+	)
 	if not intersection:
-		queue_free()
+		_self_despawn()
 		return
 
-	# Pick a random connected road (different from current)
-	var roads: Array[RoadSegment] = _road_network.get_roads()
-	var candidates: Array[RoadSegment] = []
-	for road in roads:
-		if road != _assigned_road:
-			# Check if this road passes near the intersection
-			var road_start: Vector3 = road.global_transform * road.curve.get_point_position(0)
-			var road_end: Vector3 = road.global_transform * road.curve.get_point_position(road.curve.point_count - 1)
-			if road_start.distance_to(intersection.global_position) < 10.0 or road_end.distance_to(intersection.global_position) < 10.0:
-				candidates.append(road)
-
+	# Get all connected roads at this intersection, excluding our current road
+	var candidates: Array[Dictionary] = _road_network.get_connected_roads(
+		intersection, _assigned_road
+	)
 	if candidates.is_empty():
-		queue_free()
+		_self_despawn()
 		return
 
-	var next_road: RoadSegment = candidates[randi() % candidates.size()]
-
-	# Determine direction based on which end of the road is near the intersection
-	var start_pos: Vector3 = next_road.global_transform * next_road.curve.get_point_position(0)
-	var next_dir: int = 1 if start_pos.distance_to(intersection.global_position) < 10.0 else -1
+	# Pick a random connected road
+	var choice: Dictionary = candidates[randi() % candidates.size()]
+	var next_road: RoadSegment = choice["road"] as RoadSegment
+	var next_dir: int = choice["direction"] as int
 
 	_assigned_road = next_road
 	_assigned_direction = next_dir
@@ -222,6 +231,11 @@ func _try_next_road() -> void:
 	_path_points = next_road.get_lane_points(0, next_dir, 40)
 	_path_index = 0
 	_state = State.TURNING
+
+
+func _self_despawn() -> void:
+	vehicle_despawning.emit()
+	queue_free()
 
 
 func _honk() -> void:

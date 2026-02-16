@@ -112,8 +112,15 @@ func _spawn_vehicle(road: RoadSegment, direction: int, pos: Vector3, forward: Ve
 		mat.albedo_color = VEHICLE_COLORS[randi() % VEHICLE_COLORS.size()]
 		car_mesh.material_override = mat
 
+	# Connect despawn signal so we track count accurately (T-9)
+	vehicle.vehicle_despawning.connect(_on_vehicle_despawning.bind(vehicle))
+
 	vehicle.initialize(road, direction, _road_network)
 	_active_vehicles.append(vehicle)
+
+
+func _on_vehicle_despawning(vehicle: TrafficVehicle) -> void:
+	_active_vehicles.erase(vehicle)
 
 
 func _despawn_far_vehicles() -> void:

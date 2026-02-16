@@ -21,6 +21,42 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 [node name="UILayer" type="CanvasLayer" parent="."]
 layer = 10
 
+[node name="Speedometer" type="Label" parent="UILayer"]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 200.0
+offset_bottom = 60.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1.0, 0.85)
+theme_override_font_sizes/font_size = 28
+text = "0 MPH"
+
+[node name="RPMMeter" type="Label" parent="UILayer"]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 0
+offset_left = 20.0
+offset_top = 55.0
+offset_right = 200.0
+offset_bottom = 90.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1.0, 0.85)
+theme_override_font_sizes/font_size = 22
+text = "800 RPM"
+
+[node name="GearIndicator" type="Label" parent="UILayer"]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 0
+offset_left = 20.0
+offset_top = 85.0
+offset_right = 200.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1.0, 0.85)
+theme_override_font_sizes/font_size = 22
+text = "GEAR: 1"
+
 [node name="Phone" parent="UILayer" instance=ExtResource("4_phone")]
 unique_name_in_owner = true
 layout_mode = 3

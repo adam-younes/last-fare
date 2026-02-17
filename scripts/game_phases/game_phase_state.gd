@@ -3,14 +3,15 @@ extends RefCounted
 ## Base class for game phase states.
 
 var game: Node = null
+var active: bool = false
 
 
 func enter() -> void:
-	pass
+	active = true
 
 
 func exit() -> void:
-	pass
+	active = false
 
 
 func process(_delta: float) -> void:

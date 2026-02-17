@@ -20,6 +20,7 @@ var actual_destination: String = ""
 var _glitch_timer: float = 0.0
 var _target_world_position: Vector3 = Vector3.ZERO
 var _has_target: bool = false
+var _car_node: Node = null
 
 @onready var destination_label: Label = %DestinationLabel
 @onready var eta_label: Label = %ETALabel
@@ -40,9 +41,10 @@ func _process(delta: float) -> void:
 		_update_glitch_effect()
 
 	if _has_target and current_state == GPSState.NORMAL:
-		var car: Node = get_tree().get_first_node_in_group("car_interior")
-		if car:
-			var dist: float = car.global_position.distance_to(_target_world_position)
+		if _car_node == null:
+			_car_node = get_tree().get_first_node_in_group("car_interior")
+		if _car_node:
+			var dist: float = _car_node.global_position.distance_to(_target_world_position)
 			var dist_display: String = "%.0fm" % dist if dist < 1000.0 else "%.1fkm" % (dist / 1000.0)
 			eta_label.text = dist_display
 

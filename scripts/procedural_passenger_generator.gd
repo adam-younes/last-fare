@@ -93,7 +93,7 @@ func _generate_minimal_dialogue(p: PassengerData) -> Array[DialogueNode]:
 	# Greeting
 	var greeting := DialogueNode.new()
 	greeting.id = "greeting"
-	greeting.speaker = "PASSENGER"
+	greeting.speaker = DialogueNode.Speaker.PASSENGER
 	if p.talkativeness > 0.5:
 		greeting.text = GREETINGS_TALKATIVE[randi() % GREETINGS_TALKATIVE.size()]
 	else:
@@ -106,7 +106,7 @@ func _generate_minimal_dialogue(p: PassengerData) -> Array[DialogueNode]:
 	if p.talkativeness > 0.4:
 		var confirm := DialogueNode.new()
 		confirm.id = "dest_confirm"
-		confirm.speaker = "PASSENGER"
+		confirm.speaker = DialogueNode.Speaker.PASSENGER
 		confirm.text = "%s, right?" % p.destination
 		confirm.auto_advance = 3.0
 		confirm.pre_delay = 2.0

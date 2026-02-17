@@ -49,8 +49,9 @@ func get_next_passenger() -> PassengerData:
 	if roll < narrative_probability:
 		var narrative: PassengerData = _get_eligible_narrative_passenger()
 		if narrative:
-			_assign_world_positions(narrative)
-			return narrative
+			var instance: PassengerData = narrative.duplicate(true) as PassengerData
+			_assign_world_positions(instance)
+			return instance
 
 	# 3. Otherwise, generate procedural (needs road network)
 	if _road_network:
@@ -61,8 +62,9 @@ func get_next_passenger() -> PassengerData:
 	# 4. Fallback: try narrative anyway
 	var fallback: PassengerData = _get_eligible_narrative_passenger()
 	if fallback:
-		_assign_world_positions(fallback)
-		return fallback
+		var instance: PassengerData = fallback.duplicate(true) as PassengerData
+		_assign_world_positions(instance)
+		return instance
 
 	return null
 

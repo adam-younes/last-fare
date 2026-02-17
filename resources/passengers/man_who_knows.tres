@@ -19,7 +19,7 @@ sets_flag = "ignored_man_knowing"
 [sub_resource type="Resource" id="node_m1"]
 script = ExtResource("2_dn")
 id = "m1"
-speaker = "PASSENGER"
+speaker = 0
 text = "Long night, huh, {player_name}?"
 next_node = "m2"
 pre_delay = 3.0
@@ -27,7 +27,7 @@ pre_delay = 3.0
 [sub_resource type="Resource" id="node_m2"]
 script = ExtResource("2_dn")
 id = "m2"
-speaker = "INTERNAL"
+speaker = 5
 text = "(You never told him your name. The app only shows your first initial.)"
 choices = [SubResource("choice_how_know"), SubResource("choice_ignore")]
 pre_delay = 1.0
@@ -35,14 +35,14 @@ pre_delay = 1.0
 [sub_resource type="Resource" id="node_m3_how"]
 script = ExtResource("2_dn")
 id = "m3_how"
-speaker = "PASSENGER"
+speaker = 0
 text = "It's on the app, isn't it? Relax."
 next_node = "m4"
 
 [sub_resource type="Resource" id="node_m3_silent"]
 script = ExtResource("2_dn")
 id = "m3_silent"
-speaker = "PASSENGER"
+speaker = 0
 text = "Not much of a talker tonight. You were chattier when you lived in {player_hometown}."
 next_node = "m4"
 triggers = ["ambience:tension"]
@@ -50,7 +50,7 @@ triggers = ["ambience:tension"]
 [sub_resource type="Resource" id="node_m4"]
 script = ExtResource("2_dn")
 id = "m4"
-speaker = "PASSENGER"
+speaker = 0
 text = "You know, I almost didn't request you. But the app kept suggesting you. Over and over. Like it wanted us to meet."
 next_node = "m5"
 pre_delay = 2.0
@@ -59,14 +59,14 @@ triggers = ["ambience:tension"]
 [sub_resource type="Resource" id="node_m5"]
 script = ExtResource("2_dn")
 id = "m5"
-speaker = "PASSENGER"
+speaker = 0
 text = "How many years has it been? {years_driving}? Feels longer, doesn't it."
 next_node = "m6"
 
 [sub_resource type="Resource" id="node_m6"]
 script = ExtResource("2_dn")
 id = "m6"
-speaker = "PASSENGER"
+speaker = 0
 text = "This is my stop. Oh — and {player_name}? Don't pick up the next one."
 triggers = ["set_flag:man_warned_you", "ambience:silence"]
 auto_advance = 4.0

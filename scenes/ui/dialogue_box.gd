@@ -3,6 +3,7 @@ extends Control
 
 signal dialogue_finished
 signal choice_made(choice_index: int)
+signal trigger_fired(action: String, param: String)
 
 var _current_nodes: Array[DialogueNode] = []
 var _current_index: int = -1
@@ -23,13 +24,16 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if not panel.visible:
+		return
+
 	if _auto_advance_timer > 0.0:
 		_auto_advance_timer -= delta
 		if _auto_advance_timer <= 0.0:
 			advance()
 
 	# Blink the continue indicator
-	if panel.visible and not _waiting_for_choice and _auto_advance_timer <= 0.0:
+	if not _waiting_for_choice and _auto_advance_timer <= 0.0:
 		continue_indicator.visible = fmod(Time.get_ticks_msec() / 1000.0, 1.0) < 0.6
 	else:
 		continue_indicator.visible = false
@@ -120,20 +124,20 @@ func advance(target_id: String = "") -> void:
 
 
 func _display_node(node: DialogueNode) -> void:
-	speaker_label.text = _format_speaker(node.speaker)
+	speaker_label.text = _format_speaker(node)
 	text_label.text = _substitute_variables(node.text)
 
 	# Color the speaker label based on who's talking
 	match node.speaker:
-		"PASSENGER":
+		DialogueNode.Speaker.PASSENGER, DialogueNode.Speaker.NAMED:
 			speaker_label.add_theme_color_override("font_color", Color(0.9, 0.7, 0.3))
-		"DRIVER", "PLAYER":
+		DialogueNode.Speaker.DRIVER:
 			speaker_label.add_theme_color_override("font_color", Color(0.5, 0.8, 1.0))
-		"GPS":
+		DialogueNode.Speaker.GPS:
 			speaker_label.add_theme_color_override("font_color", Color(0.3, 0.9, 0.3))
-		"PHONE":
+		DialogueNode.Speaker.PHONE:
 			speaker_label.add_theme_color_override("font_color", Color(0.3, 0.6, 1.0))
-		"INTERNAL", "NARRATOR":
+		DialogueNode.Speaker.INTERNAL, DialogueNode.Speaker.NARRATOR:
 			speaker_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 
 	# Show choices if any
@@ -166,9 +170,13 @@ func _on_choice_selected(choice: DialogueChoice) -> void:
 		GameState.set_flag(choice.sets_flag)
 
 	_fire_triggers(choice.triggers)
-	choice_made.emit(choices_container.get_children().find(
-		func(c): return c is Button and c.text.ends_with(choice.text)
-	))
+	var choice_buttons: Array[Node] = choices_container.get_children()
+	var idx: int = -1
+	for i in choice_buttons.size():
+		if choice_buttons[i] is Button and choice_buttons[i].text.ends_with(choice.text):
+			idx = i
+			break
+	choice_made.emit(idx)
 
 	if not choice.next_node.is_empty():
 		advance(choice.next_node)
@@ -189,22 +197,24 @@ func _end_dialogue() -> void:
 	dialogue_finished.emit()
 
 
-func _format_speaker(speaker: String) -> String:
-	match speaker:
-		"PASSENGER":
+func _format_speaker(node: DialogueNode) -> String:
+	match node.speaker:
+		DialogueNode.Speaker.PASSENGER:
 			return "Passenger"
-		"DRIVER", "PLAYER":
+		DialogueNode.Speaker.NAMED:
+			return node.speaker_name if not node.speaker_name.is_empty() else "Passenger"
+		DialogueNode.Speaker.DRIVER:
 			return GameState.player_name
-		"GPS":
+		DialogueNode.Speaker.GPS:
 			return "GPS"
-		"PHONE":
+		DialogueNode.Speaker.PHONE:
 			return "FareShare App"
-		"INTERNAL":
+		DialogueNode.Speaker.INTERNAL:
 			return "(Thinking)"
-		"NARRATOR":
+		DialogueNode.Speaker.NARRATOR:
 			return ""
 		_:
-			return speaker
+			return "???"
 
 
 func _substitute_variables(text: String) -> String:
@@ -224,37 +234,4 @@ func _fire_triggers(triggers: Array) -> void:
 		var parts := trigger.split(":", true, 1)
 		var action := parts[0]
 		var param := parts[1] if parts.size() > 1 else ""
-
-		match action:
-			"set_flag":
-				GameState.set_flag(param)
-			"remove_flag":
-				GameState.remove_flag(param)
-			"gps":
-				var gps_node := get_tree().get_first_node_in_group("gps")
-				if gps_node == null:
-					push_warning("DialogueBox: GPS node not found in group 'gps' for trigger '%s'" % trigger)
-				elif gps_node.has_method("set_state"):
-					match param:
-						"glitch":
-							gps_node.set_state(1)  # GPSState.GLITCHING
-						"no_signal":
-							gps_node.set_state(3)  # GPSState.NO_SIGNAL
-						"normal":
-							gps_node.set_state(0)  # GPSState.NORMAL
-						_:
-							push_warning("DialogueBox: Unknown GPS trigger param '%s'" % param)
-			"event":
-				EventManager.trigger(param)
-			"ambience":
-				match param:
-					"tension":
-						AudioManager.set_ambience(AudioManager.AmbienceState.TENSION)
-					"silence":
-						AudioManager.set_ambience(AudioManager.AmbienceState.SILENCE)
-					"wrong":
-						AudioManager.set_ambience(AudioManager.AmbienceState.WRONG)
-					"normal":
-						AudioManager.set_ambience(AudioManager.AmbienceState.NORMAL_DRIVING)
-			_:
-				push_warning("DialogueBox: Unknown trigger action '%s' in '%s'" % [action, trigger])
+		trigger_fired.emit(action, param)

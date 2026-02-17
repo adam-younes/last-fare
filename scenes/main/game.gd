@@ -13,9 +13,11 @@ enum GamePhase {
 	ENDING,
 }
 
+## 1 game-hour per 5 real-minutes (300 seconds)
+const GAME_TIME_RATE: float = 1.0 / 300.0
+
 var current_phase: GamePhase = GamePhase.TITLE
 var current_passenger_data: PassengerData = null
-var ride_timer: float = 0.0
 
 var _current_state: GamePhaseState = null
 var _phase_states: Dictionary = {}
@@ -77,6 +79,7 @@ func _register_phase_states() -> void:
 func _process(delta: float) -> void:
 	if _current_state:
 		_current_state.process(delta)
+	GameState.advance_time(delta * GAME_TIME_RATE)
 	_update_speedometer()
 
 
@@ -99,6 +102,7 @@ func _connect_signals() -> void:
 	phone.ride_accepted.connect(_on_ride_accepted)
 	phone.ride_refused.connect(_on_ride_refused)
 	dialogue_box.dialogue_finished.connect(_on_dialogue_finished)
+	dialogue_box.trigger_fired.connect(_on_dialogue_trigger)
 	destination_detector.target_reached.connect(_on_destination_reached)
 	gps.destination_reached.connect(_on_gps_arrival)
 
@@ -143,7 +147,7 @@ func refuse_current_ride() -> void:
 			return
 		GameState.refuse_ride(current_passenger_data.id)
 		if not current_passenger_data.refuse_consequence.is_empty():
-			EventManager.trigger(current_passenger_data.refuse_consequence)
+			GameState.set_flag(current_passenger_data.refuse_consequence)
 		phone.hide_ride_request()
 		transition_to_phase(GamePhase.WAITING_FOR_RIDE)
 
@@ -214,6 +218,38 @@ func _on_destination_reached() -> void:
 	if current_phase == GamePhase.IN_RIDE:
 		remove_destination_marker()
 		transition_to_phase(GamePhase.DROPPING_OFF)
+
+
+func _on_dialogue_trigger(action: String, param: String) -> void:
+	match action:
+		"set_flag":
+			GameState.set_flag(param)
+		"remove_flag":
+			GameState.remove_flag(param)
+		"gps":
+			match param:
+				"glitch":
+					gps.set_state(gps.GPSState.GLITCHING)
+				"no_signal":
+					gps.set_state(gps.GPSState.NO_SIGNAL)
+				"normal":
+					gps.set_state(gps.GPSState.NORMAL)
+				_:
+					push_warning("Game: Unknown GPS trigger param '%s'" % param)
+		"event":
+			EventManager.trigger(param)
+		"ambience":
+			match param:
+				"tension":
+					AudioManager.set_ambience(AudioManager.AmbienceState.TENSION)
+				"silence":
+					AudioManager.set_ambience(AudioManager.AmbienceState.SILENCE)
+				"wrong":
+					AudioManager.set_ambience(AudioManager.AmbienceState.WRONG)
+				"normal":
+					AudioManager.set_ambience(AudioManager.AmbienceState.NORMAL_DRIVING)
+		_:
+			push_warning("Game: Unknown trigger action '%s:%s'" % [action, param])
 
 
 func _on_gps_arrival() -> void:

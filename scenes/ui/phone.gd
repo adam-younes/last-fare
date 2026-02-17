@@ -5,7 +5,8 @@ signal ride_accepted(passenger_data: PassengerData)
 signal ride_refused(passenger_data: PassengerData)
 
 var _current_offer: PassengerData = null
-var _notification_queue: Array[Dictionary] = []
+var _notification_counter: int = 0
+var _time_update_timer: float = 0.0
 
 @onready var ride_request_panel: PanelContainer = %RideRequestPanel
 @onready var rider_name_label: Label = %RiderNameLabel
@@ -23,11 +24,16 @@ func _ready() -> void:
 	notification_label.text = ""
 	accept_button.pressed.connect(_on_accept)
 	refuse_button.pressed.connect(_on_refuse)
+	GameState.ride_completed.connect(_on_state_changed)
+	GameState.shift_state_changed.connect(_on_shift_state_changed)
 	_update_shift_info()
 
 
-func _process(_delta: float) -> void:
-	_update_shift_info()
+func _process(delta: float) -> void:
+	_time_update_timer += delta
+	if _time_update_timer >= 1.0:
+		_time_update_timer = 0.0
+		_update_shift_info()
 
 
 func show_ride_request(passenger: PassengerData) -> void:
@@ -46,10 +52,22 @@ func hide_ride_request() -> void:
 
 
 func show_notification(text: String, duration: float = 3.0) -> void:
+	_notification_counter += 1
+	var my_id: int = _notification_counter
 	notification_label.text = text
 	notification_label.visible = true
 	await get_tree().create_timer(duration).timeout
-	notification_label.visible = false
+	# Only hide if no newer notification has taken over
+	if _notification_counter == my_id:
+		notification_label.visible = false
+
+
+func _on_state_changed(_ride_number: int) -> void:
+	_update_shift_info()
+
+
+func _on_shift_state_changed(_new_state: GameState.ShiftState) -> void:
+	_update_shift_info()
 
 
 func _on_accept() -> void:

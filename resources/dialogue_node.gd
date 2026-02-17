@@ -2,10 +2,22 @@ class_name DialogueNode
 extends Resource
 ## A single node in a dialogue tree — one line of text with optional branching.
 
+enum Speaker {
+	PASSENGER,
+	DRIVER,
+	GPS,
+	PHONE,
+	NARRATOR,
+	INTERNAL,
+	NAMED,  ## Uses speaker_name field for display
+}
+
 @export var id: String
 
-## Who is speaking: "PASSENGER", "DRIVER", "GPS", "PHONE", "NARRATOR", "INTERNAL"
-@export var speaker: String = "PASSENGER"
+@export var speaker: Speaker = Speaker.PASSENGER
+
+## Custom speaker name — only used when speaker == NAMED
+@export var speaker_name: String = ""
 
 @export_multiline var text: String
 

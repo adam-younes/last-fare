@@ -19,7 +19,7 @@ sets_flag = "played_along_woman"
 [sub_resource type="Resource" id="node_w1"]
 script = ExtResource("2_dn")
 id = "w1"
-speaker = "PASSENGER"
+speaker = 0
 text = "Oh! It's you again."
 next_node = "w2"
 pre_delay = 2.0
@@ -27,14 +27,14 @@ pre_delay = 2.0
 [sub_resource type="Resource" id="node_w2"]
 script = ExtResource("2_dn")
 id = "w2"
-speaker = "PASSENGER"
+speaker = 0
 text = "I rode with you last Tuesday. Same car. Same air freshener. You were playing that song... the one with the piano."
 choices = [SubResource("choice_deny"), SubResource("choice_play_along")]
 
 [sub_resource type="Resource" id="node_w2_deny"]
 script = ExtResource("2_dn")
 id = "w2_deny"
-speaker = "PASSENGER"
+speaker = 0
 text = "You were wearing a blue jacket. You told me about your hometown... {player_hometown}, right?"
 next_node = "w3"
 triggers = ["ambience:tension"]
@@ -42,14 +42,14 @@ triggers = ["ambience:tension"]
 [sub_resource type="Resource" id="node_w2_play"]
 script = ExtResource("2_dn")
 id = "w2_play_along"
-speaker = "PASSENGER"
+speaker = 0
 text = "Last Tuesday. Around this time, actually. You seemed... tired. Like tonight."
 next_node = "w3"
 
 [sub_resource type="Resource" id="node_w3"]
 script = ExtResource("2_dn")
 id = "w3"
-speaker = "INTERNAL"
+speaker = 5
 text = "(You didn't drive last Tuesday. You were home all night.)"
 next_node = "w4"
 pre_delay = 1.5
@@ -57,7 +57,7 @@ pre_delay = 1.5
 [sub_resource type="Resource" id="node_w4"]
 script = ExtResource("2_dn")
 id = "w4"
-speaker = "PASSENGER"
+speaker = 0
 text = "You know what's funny? You said the exact same thing last time too."
 triggers = ["ambience:tension", "set_flag:woman_warned_you"]
 auto_advance = 4.0

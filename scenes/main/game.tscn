@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://crgame00001"]
+[gd_scene load_steps=12 format=3 uid="uid://crgame00001"]
 
 [ext_resource type="Script" uid="uid://prwgpxbb16fa" path="res://scenes/main/game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://crcar00001" path="res://scenes/main/car_interior.tscn" id="2_car"]
@@ -9,6 +9,8 @@
 [ext_resource type="Script" uid="uid://uk7i26bsbeke" path="res://scripts/traffic/traffic_manager.gd" id="8_tmgr"]
 [ext_resource type="Script" uid="uid://bk4hpxlh1mo80" path="res://scripts/proximity_detector.gd" id="9_pdet"]
 [ext_resource type="PackedScene" uid="uid://crpause0001" path="res://scenes/ui/pause_menu.tscn" id="10_pause"]
+[ext_resource type="Script" uid="uid://crviodet001" path="res://scripts/traffic/violation_detector.gd" id="11_vdet"]
+[ext_resource type="Script" uid="uid://crviolnd001" path="res://scripts/ui/violation_indicator.gd" id="12_vind"]
 
 [node name="Game" type="Node"]
 script = ExtResource("1_game")
@@ -86,6 +88,28 @@ color = Color(0, 0, 0, 0)
 
 [node name="PauseMenu" parent="UILayer" instance=ExtResource("10_pause")]
 layout_mode = 1
+
+[node name="ViolationIndicator" type="Label" parent="UILayer"]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 20.0
+offset_right = 150.0
+offset_bottom = 65.0
+theme_override_colors/font_color = Color(1, 0.15, 0.15, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 32
+horizontal_alignment = 1
+text = ""
+visible = false
+script = ExtResource("12_vind")
+
+[node name="ViolationDetector" type="Node" parent="."]
+script = ExtResource("11_vdet")
 
 [node name="PassengerManager" type="Node" parent="."]
 script = ExtResource("6_pmgr")

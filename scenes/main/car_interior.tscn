@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://crcar00001"]
+[gd_scene load_steps=12 format=3 uid="uid://crcar00001"]
 
 [ext_resource type="Script" uid="uid://da11q5ui24sou" path="res://scenes/main/car_interior.gd" id="1_car"]
 [ext_resource type="PackedScene" uid="uid://crgps00001" path="res://scenes/ui/gps.tscn" id="2_gps"]
@@ -15,6 +15,12 @@
 [sub_resource type="PlaneMesh" id="PlaneMesh_gps01"]
 size = Vector2(0.18, 0.12)
 orientation = 2
+
+[sub_resource type="BoxMesh" id="BoxMesh_mirror"]
+size = Vector3(0.22, 0.07, 0.015)
+
+[sub_resource type="BoxMesh" id="BoxMesh_side_mirror"]
+size = Vector3(0.16, 0.1, 0.015)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_car01"]
 size = Vector3(2.0, 1.2, 4.5)
@@ -46,10 +52,49 @@ script = ExtResource("3_cam")
 fov = 70.0
 
 [node name="PassengerSeat" type="Marker3D" parent="CarMesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 0.8, -0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.8, 1.0)
 
 [node name="RearviewMirror" type="Node3D" parent="CarMesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -0.1)
+
+[node name="MirrorMesh" type="MeshInstance3D" parent="CarMesh/RearviewMirror"]
+mesh = SubResource("BoxMesh_mirror")
+
+[node name="RearviewViewport" type="SubViewport" parent="CarMesh/RearviewMirror"]
+gui_disable_input = true
+size = Vector2i(200, 100)
+render_target_update_mode = 4
+
+[node name="RearviewCamera" type="Camera3D" parent="CarMesh/RearviewMirror/RearviewViewport"]
+fov = 60.0
+
+[node name="LeftMirror" type="Node3D" parent="CarMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 0.95, -0.2)
+
+[node name="MirrorMesh" type="MeshInstance3D" parent="CarMesh/LeftMirror"]
+mesh = SubResource("BoxMesh_side_mirror")
+
+[node name="SubViewport" type="SubViewport" parent="CarMesh/LeftMirror"]
+gui_disable_input = true
+size = Vector2i(160, 100)
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="CarMesh/LeftMirror/SubViewport"]
+fov = 50.0
+
+[node name="RightMirror" type="Node3D" parent="CarMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 0.95, -0.2)
+
+[node name="MirrorMesh" type="MeshInstance3D" parent="CarMesh/RightMirror"]
+mesh = SubResource("BoxMesh_side_mirror")
+
+[node name="SubViewport" type="SubViewport" parent="CarMesh/RightMirror"]
+gui_disable_input = true
+size = Vector2i(160, 100)
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="CarMesh/RightMirror/SubViewport"]
+fov = 50.0
 
 [node name="DashboardLight" type="OmniLight3D" parent="CarMesh"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.6)

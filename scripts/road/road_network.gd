@@ -213,3 +213,16 @@ func _closest_point_on_road(road: RoadSegment, world_pos: Vector3) -> Vector3:
 			best_dist = d
 			best_pos = p
 	return best_pos
+
+
+func get_sidewalk_position(world_pos: Vector3, offset_distance: float = 3.5) -> Vector3:
+	## Returns a position further from the road centerline, simulating a sidewalk.
+	var road: RoadSegment = get_nearest_road(world_pos)
+	if not road:
+		return world_pos
+	var centerline_pos: Vector3 = _closest_point_on_road(road, world_pos)
+	var away_from_road: Vector3 = world_pos - centerline_pos
+	away_from_road.y = 0.0
+	if away_from_road.length() < 0.01:
+		return world_pos
+	return centerline_pos + away_from_road.normalized() * (away_from_road.length() + offset_distance)

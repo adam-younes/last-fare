@@ -77,8 +77,15 @@ func _build_intersections() -> void:
 			var intersection := Intersection.new()
 			intersection.name = "Int_H%dV%d" % [row + 1, col + 1]
 			intersection.position = Vector3(x, 0.0, z)
-			intersection.has_traffic_light = true
-			intersection.green_duration = 12.0 + randf() * 6.0
+
+			# Corner intersections get stop signs, others get traffic lights
+			var is_corner: bool = (row == 0 or row == GRID_ROWS - 1) and (col == 0 or col == GRID_COLS - 1)
+			if is_corner:
+				intersection.intersection_type = Intersection.IntersectionType.STOP_SIGN
+			else:
+				intersection.intersection_type = Intersection.IntersectionType.TRAFFIC_LIGHT
+				intersection.green_duration = 12.0 + randf() * 6.0
+
 			_road_network.add_child(intersection)
 
 

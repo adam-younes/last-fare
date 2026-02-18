@@ -17,6 +17,7 @@ var _road_network: RoadNetwork = null
 var _stopped_timer: float = 0.0
 var _honk_cooldown: float = 0.0
 var _vertical_velocity: float = 0.0
+var _cleared_intersections: Dictionary = {}  # Intersection -> true (stop signs already stopped at)
 
 const ACCELERATION := 6.0
 const BRAKE_DECEL := 12.0
@@ -84,7 +85,7 @@ func _process_driving(delta: float) -> void:
 			return
 
 	# Check for traffic lights
-	if _should_stop_for_light():
+	if _should_stop_at_intersection():
 		_state = State.BRAKING
 		return
 
@@ -110,12 +111,20 @@ func _process_braking(delta: float) -> void:
 		if dist < STOP_DISTANCE * 2.0:
 			obstacle_clear = false
 
-	if obstacle_clear and not _should_stop_for_light():
+	if obstacle_clear and not _should_stop_at_intersection():
 		_state = State.DRIVING
 
 
 func _process_stopped(delta: float) -> void:
 	_stopped_timer += delta
+
+	# Clear stop sign after waiting
+	if _stopped_timer > 1.5:
+		var intersection: Intersection = _road_network.get_road_end_intersection(
+			_assigned_road, _assigned_direction
+		)
+		if intersection and intersection.is_stop_sign():
+			_cleared_intersections[intersection] = true
 
 	# Check if can resume
 	var obstacle_clear: bool = true
@@ -124,7 +133,7 @@ func _process_stopped(delta: float) -> void:
 		if dist < STOP_DISTANCE * 2.5:
 			obstacle_clear = false
 
-	if obstacle_clear and not _should_stop_for_light():
+	if obstacle_clear and not _should_stop_at_intersection():
 		_state = State.DRIVING
 		_stopped_timer = 0.0
 		return
@@ -172,11 +181,10 @@ func _advance_path_index() -> void:
 		_path_index += 1
 
 
-func _should_stop_for_light() -> bool:
+func _should_stop_at_intersection() -> bool:
 	if not _road_network or not _assigned_road:
 		return false
 
-	# O(1) lookup: get the intersection ahead of us
 	var intersection: Intersection = _road_network.get_road_end_intersection(
 		_assigned_road, _assigned_direction
 	)
@@ -186,15 +194,18 @@ func _should_stop_for_light() -> bool:
 	var to_intersection: Vector3 = intersection.global_position - global_position
 	var dist: float = to_intersection.length()
 
-	# Only consider intersections within stopping range, not ones we're already past
 	if dist < STOP_DISTANCE or dist > 15.0:
 		return false
 
-	# Dot-product: only stop if the intersection is ahead of us
 	var forward: Vector3 = -transform.basis.z
 	if forward.dot(to_intersection.normalized()) < 0.0:
 		return false
 
+	# Stop signs: check if already cleared
+	if intersection.is_stop_sign():
+		return not _cleared_intersections.has(intersection)
+
+	# Traffic lights: stop if not green
 	var light_state: Intersection.LightState = intersection.get_light_state(_assigned_road)
 	return light_state != Intersection.LightState.GREEN
 
@@ -231,6 +242,7 @@ func _try_next_road() -> void:
 	_path_points = next_road.get_lane_points(0, next_dir, 40)
 	_path_index = 0
 	_state = State.TURNING
+	_cleared_intersections.clear()
 
 
 func _self_despawn() -> void:

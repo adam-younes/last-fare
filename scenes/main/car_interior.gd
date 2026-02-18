@@ -68,6 +68,15 @@ var _has_passenger: bool = false
 @onready var car_mesh: Node3D = $CarMesh
 @onready var passenger_seat: Marker3D = $CarMesh/PassengerSeat
 @onready var steering_wheel: MeshInstance3D = $SteeringWheel
+@onready var _rearview_viewport: SubViewport = $CarMesh/RearviewMirror/RearviewViewport
+@onready var _rearview_camera: Camera3D = $CarMesh/RearviewMirror/RearviewViewport/RearviewCamera
+@onready var _mirror_mesh: MeshInstance3D = $CarMesh/RearviewMirror/MirrorMesh
+@onready var _left_mirror_viewport: SubViewport = $CarMesh/LeftMirror/SubViewport
+@onready var _left_mirror_camera: Camera3D = $CarMesh/LeftMirror/SubViewport/Camera3D
+@onready var _left_mirror_mesh: MeshInstance3D = $CarMesh/LeftMirror/MirrorMesh
+@onready var _right_mirror_viewport: SubViewport = $CarMesh/RightMirror/SubViewport
+@onready var _right_mirror_camera: Camera3D = $CarMesh/RightMirror/SubViewport/Camera3D
+@onready var _right_mirror_mesh: MeshInstance3D = $CarMesh/RightMirror/MirrorMesh
 
 var _steering_base_transform: Transform3D
 
@@ -76,6 +85,7 @@ func _ready() -> void:
 	add_to_group("car_interior")
 	if steering_wheel:
 		_steering_base_transform = steering_wheel.transform
+	_setup_rearview()
 
 
 func _physics_process(delta: float) -> void:
@@ -86,6 +96,7 @@ func _physics_process(delta: float) -> void:
 	_update_steering(delta)
 	_apply_movement(delta)
 	_update_visuals()
+	_update_rearview()
 
 
 func _read_input(delta: float) -> void:
@@ -263,6 +274,44 @@ func _update_visuals() -> void:
 	if steering_wheel:
 		var steer_rot: Basis = Basis(Vector3.UP, deg_to_rad(-_steer_angle * 3.0))
 		steering_wheel.transform = _steering_base_transform * Transform3D(steer_rot, Vector3.ZERO)
+
+
+func _setup_rearview() -> void:
+	## Share the main viewport's World3D so the rearview camera sees the game scene.
+	var world: World3D = get_viewport().world_3d
+	_rearview_viewport.world_3d = world
+	_left_mirror_viewport.world_3d = world
+	_right_mirror_viewport.world_3d = world
+	## Apply viewport texture to mirror mesh (same pattern as GPS screen in game.gd).
+	_apply_mirror_material(_mirror_mesh, _rearview_viewport)
+	_apply_mirror_material(_left_mirror_mesh, _left_mirror_viewport)
+	_apply_mirror_material(_right_mirror_mesh, _right_mirror_viewport)
+
+
+func _apply_mirror_material(mesh: MeshInstance3D, viewport: SubViewport) -> void:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.emission_enabled = true
+	mat.emission_energy_multiplier = 0.4
+	var vp_tex: ViewportTexture = viewport.get_texture()
+	mat.albedo_texture = vp_tex
+	mat.emission_texture = vp_tex
+	mesh.material_override = mat
+
+
+func _update_rearview() -> void:
+	if not _rearview_camera:
+		return
+	var gt: Transform3D = car_mesh.global_transform
+	## Rearview: center mirror looking straight back.
+	_rearview_camera.global_position = gt * Vector3(0.0, 1.35, -0.1)
+	_rearview_camera.look_at(gt * Vector3(0.0, 1.0, 10.0), Vector3.UP)
+	## Left side mirror: looking backward-left.
+	_left_mirror_camera.global_position = gt * Vector3(-1.0, 0.95, -0.2)
+	_left_mirror_camera.look_at(gt * Vector3(-2.0, 0.8, 10.0), Vector3.UP)
+	## Right side mirror: looking backward-right.
+	_right_mirror_camera.global_position = gt * Vector3(1.0, 0.95, -0.2)
+	_right_mirror_camera.look_at(gt * Vector3(2.0, 0.8, 10.0), Vector3.UP)
 
 
 # -- Public API --

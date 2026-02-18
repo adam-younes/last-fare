@@ -36,6 +36,8 @@ var _active_destination_marker: PickupMarker = null
 @onready var gps_screen_mesh: MeshInstance3D = $CarInterior/CarMesh/GPSScreen/ScreenMesh
 @onready var road_network: RoadNetwork = $TestArea/RoadNetwork
 @onready var traffic_manager: TrafficManager = $TrafficManager
+@onready var violation_detector: ViolationDetector = $ViolationDetector
+@onready var violation_indicator: ViolationIndicator = %ViolationIndicator
 @onready var pickup_detector: ProximityDetector = $PickupDetector
 @onready var destination_detector: ProximityDetector = $DestinationDetector
 
@@ -46,6 +48,7 @@ func _ready() -> void:
 	_connect_signals()
 	_register_phase_states()
 	traffic_manager.initialize(road_network, car_interior)
+	violation_detector.initialize(road_network, car_interior)
 	passenger_manager.initialize(road_network)
 	_start_game()
 
@@ -105,6 +108,7 @@ func _connect_signals() -> void:
 	dialogue_box.trigger_fired.connect(_on_dialogue_trigger)
 	destination_detector.target_reached.connect(_on_destination_reached)
 	gps.destination_reached.connect(_on_gps_arrival)
+	violation_detector.violation_detected.connect(_on_violation_detected)
 
 
 func transition_to_phase(phase: GamePhase) -> void:
@@ -250,6 +254,10 @@ func _on_dialogue_trigger(action: String, param: String) -> void:
 					AudioManager.set_ambience(AudioManager.AmbienceState.NORMAL_DRIVING)
 		_:
 			push_warning("Game: Unknown trigger action '%s:%s'" % [action, param])
+
+
+func _on_violation_detected(violation_type: String) -> void:
+	violation_indicator.flash(violation_type)
 
 
 func _on_gps_arrival() -> void:
